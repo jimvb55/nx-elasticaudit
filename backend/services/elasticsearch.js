@@ -71,10 +71,10 @@ async function getAuditByTitle(title, options = {}) {
     query: {
       bool: {
         should: [
-          // Using match_phrase_suffix to find documents where docPath ends with the title
+          // Using wildcard to find documents where docPath ends with the title
           {
-            match_phrase_suffix: {
-              docPath: title
+            wildcard: {
+              docPath: "*/" + title
             }
           },
           // Fallback to traditional title search in other fields
