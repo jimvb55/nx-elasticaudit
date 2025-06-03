@@ -3,9 +3,10 @@
 </template>
 
 <script>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, onBeforeUnmount } from 'vue';
 import { Chart, registerables } from 'chart.js';
 
+// Register all Chart.js components
 Chart.register(...registerables);
 
 export default {
@@ -20,8 +21,9 @@ export default {
       default: 300
     }
   },
+  emits: ['mounted'],
   
-  setup(props) {
+  setup(props, { emit }) {
     const chartContainer = ref(null);
     let chart = null;
 
@@ -209,24 +211,38 @@ export default {
     };
     
     onMounted(() => {
-      // Use setTimeout to ensure DOM is fully rendered
+      // Create chart immediately
+      createChart();
+      
+      // Force a resize event to ensure chart renders correctly in containers
+      window.dispatchEvent(new Event('resize'));
+      
+      // Emit mounted event
       setTimeout(() => {
-        createChart();
+        emit('mounted');
       }, 100);
     });
     
     // Watch both the entire timeline data object and any nested changes
     watch(() => props.timelineData, () => {
-      setTimeout(() => {
-        createChart();
-      }, 100);
+      createChart();
+      // Force a resize event to ensure chart renders correctly
+      window.dispatchEvent(new Event('resize'));
     }, { deep: true });
     
     // Additional watch for component height changes
     watch(() => props.height, () => {
-      setTimeout(() => {
-        createChart();
-      }, 100);
+      createChart();
+      // Force a resize event to ensure chart renders correctly
+      window.dispatchEvent(new Event('resize'));
+    });
+    
+    // Clean up chart instance when component is destroyed
+    onBeforeUnmount(() => {
+      if (chart) {
+        chart.destroy();
+        chart = null;
+      }
     });
     
     return {

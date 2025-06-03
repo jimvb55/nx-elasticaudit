@@ -115,28 +115,18 @@
               </v-btn-toggle>
             </v-card-title>
             <v-card-text>
-              <div class="chart-container">
-                <Suspense>
-                  <template #default>
-                    <TimelineChart
-                      v-if="chartType === 'timeline'"
-                      :timeline-data="timelineData"
-                      :height="400"
-                      :key="`timeline-chart-${refreshKey}`"
-                    />
-                    <BarChart
-                      v-else
-                      :timeline-data="timelineData"
-                      :height="400"
-                      :key="`bar-chart-${refreshKey}`"
-                    />
-                  </template>
-                  <template #fallback>
-                    <div class="d-flex justify-center align-center" style="height: 400px">
-                      <v-progress-circular indeterminate color="primary"></v-progress-circular>
-                    </div>
-                  </template>
-                </Suspense>
+              <div class="chart-container position-relative">
+                <div v-if="isChartLoading" class="position-absolute d-flex justify-center align-center" style="top: 0; left: 0; right: 0; bottom: 0; z-index: 10; background: rgba(255,255,255,0.7)">
+                  <v-progress-circular indeterminate color="primary"></v-progress-circular>
+                </div>
+                
+                <component 
+                  :is="chartType === 'timeline' ? TimelineChart : BarChart"
+                  :timeline-data="timelineData"
+                  :height="400"
+                  :key="`chart-${refreshKey}-${chartType}`"
+                  @mounted="onChartMounted"
+                />
               </div>
               <div class="text-center text-caption mt-2">
                 Timeline showing document lifecycle events and duration between operations
@@ -223,6 +213,7 @@ export default {
     const route = useRoute();
     const router = useRouter();
     const isLoading = ref(true);
+    const isChartLoading = ref(true);
     const error = ref(null);
     const timelineData = ref(null);
     const events = ref([]);
@@ -344,10 +335,18 @@ export default {
     // Watch for chart type changes to force re-render
     watch(chartType, async (newVal) => {
       console.log(`Chart type changed to: ${newVal}`);
+      // Show loading state while chart changes
+      isChartLoading.value = true;
       // Increment refresh key to force component re-render
       await nextTick();
       refreshKey.value++;
     });
+    
+    // Handle chart mounted event
+    const onChartMounted = () => {
+      console.log('Chart mounted');
+      isChartLoading.value = false;
+    };
 
     // Load data on component mount
     onMounted(() => {
@@ -356,6 +355,7 @@ export default {
 
     return {
       isLoading,
+      isChartLoading,
       error,
       timelineData,
       events,
@@ -372,7 +372,8 @@ export default {
       formatDateTime,
       getEventColor,
       handlePaginationUpdate,
-      goBackToSearch
+      goBackToSearch,
+      onChartMounted
     };
   }
 };
