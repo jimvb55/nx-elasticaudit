@@ -74,9 +74,7 @@ async function getAuditByTitle(title, options = {}) {
           // Search for docPath ending with the title (path's last segment)
           {
             wildcard: {
-              docPath: {
-                value: "*/" + title
-              }
+              docPath: "*/" + title
             }
           },
           // Fallback to traditional title search in other fields
