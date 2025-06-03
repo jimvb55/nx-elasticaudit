@@ -1,0 +1,175 @@
+<template>
+  <div class="timeline-chart-container" ref="chartContainer"></div>
+</template>
+
+<script>
+import { ref, onMounted, watch, defineProps } from 'vue';
+import { Chart, registerables } from 'chart.js';
+import 'chartjs-adapter-date-fns';
+
+Chart.register(...registerables);
+
+export default {
+  name: 'TimelineChart',
+  props: {
+    timelineData: {
+      type: Object,
+      required: true
+    },
+    height: {
+      type: Number,
+      default: 300
+    }
+  },
+  
+  setup(props) {
+    const chartContainer = ref(null);
+    let chart = null;
+
+    const eventColors = {
+      'documentCreated': '#4CAF50',      // Green
+      'documentModified': '#2196F3',     // Blue
+      'documentPublished': '#9C27B0',    // Purple
+      'documentCheckedIn': '#FF9800',    // Orange
+      'documentCheckedOut': '#F44336',   // Red
+      'documentLocked': '#607D8B',       // Blue Grey
+      'documentUnlocked': '#8BC34A',     // Light Green
+      'documentMoved': '#FF5722',        // Deep Orange
+      'documentVersioned': '#795548',    // Brown
+      'documentRemoved': '#9E9E9E',      // Grey
+      'workflowTaskCompleted': '#FFEB3B', // Yellow
+      'commentAdded': '#00BCD4',         // Cyan
+      'loginSuccess': '#673AB7',         // Deep Purple
+      'downloadRequest': '#3F51B5',      // Indigo
+      'default': '#1976D2'               // Default Blue
+    };
+
+    const getEventColor = (eventId) => {
+      return eventColors[eventId] || eventColors.default;
+    };
+
+    const formatDuration = (ms) => {
+      if (ms < 1000) return `${ms}ms`;
+      
+      const seconds = Math.floor(ms / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      
+      if (hours > 0) {
+        return `${hours}h ${minutes % 60}m`;
+      }
+      if (minutes > 0) {
+        return `${minutes}m ${seconds % 60}s`;
+      }
+      return `${seconds}s`;
+    };
+
+    const createChart = () => {
+      if (!chartContainer.value || !props.timelineData) return;
+      
+      const { timeline } = props.timelineData;
+      
+      if (!timeline || !timeline.length) return;
+      
+      // Destroy previous chart if it exists
+      if (chart) {
+        chart.destroy();
+      }
+      
+      const ctx = chartContainer.value.getContext('2d');
+      
+      // Prepare data for the timeline chart
+      const labels = timeline.map((event, index) => `Step ${index + 1}`);
+      const durations = timeline.map(event => event.durationMs);
+      const eventLabels = timeline.map(event => 
+        `${event.startEvent.eventId} → ${event.endEvent.eventId} (${event.durationFormatted})`
+      );
+      
+      const backgroundColors = timeline.map(event => 
+        getEventColor(event.startEvent.eventId)
+      );
+      
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Time Between Events',
+              data: durations,
+              backgroundColor: backgroundColors,
+              borderColor: backgroundColors,
+              borderWidth: 2,
+              pointRadius: 6,
+              pointHoverRadius: 8,
+              tension: 0.4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: (context) => {
+                  const index = context.dataIndex;
+                  return [
+                    eventLabels[index],
+                    `Duration: ${formatDuration(durations[index])}`,
+                    `Start: ${new Date(timeline[index].startTime).toLocaleString()}`,
+                    `End: ${new Date(timeline[index].endTime).toLocaleString()}`
+                  ];
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Duration (ms)'
+              },
+              ticks: {
+                callback: function(value) {
+                  return formatDuration(value);
+                }
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Event Transitions'
+              }
+            }
+          }
+        }
+      });
+    };
+    
+    onMounted(() => {
+      createChart();
+    });
+    
+    watch(() => props.timelineData, () => {
+      createChart();
+    }, { deep: true });
+    
+    return {
+      chartContainer
+    };
+  }
+};
+</script>
+
+<style scoped>
+.timeline-chart-container {
+  width: 100%;
+  height: v-bind('height + "px"');
+  position: relative;
+}
+</style>
