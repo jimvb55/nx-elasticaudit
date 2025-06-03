@@ -60,6 +60,14 @@
                       <v-list-item-title>Document Type</v-list-item-title>
                       <v-list-item-subtitle>{{ documentType }}</v-list-item-subtitle>
                     </v-list-item>
+
+                    <v-list-item v-if="documentPath">
+                      <template v-slot:prepend>
+                        <v-icon color="primary">mdi-folder-outline</v-icon>
+                      </template>
+                      <v-list-item-title>Document Path</v-list-item-title>
+                      <v-list-item-subtitle>{{ documentPath }}</v-list-item-subtitle>
+                    </v-list-item>
                   </v-list>
                 </v-col>
                 <v-col cols="12" md="6">
@@ -246,6 +254,15 @@ export default {
       if (!events.value || !events.value.length) return null;
       return events.value[0]?.docType || null;
     });
+    
+    const documentPath = computed(() => {
+      if (!events.value || !events.value.length) return null;
+      // Try to find a document path from events
+      for (const event of events.value) {
+        if (event.docPath) return event.docPath;
+      }
+      return null;
+    });
 
     const firstEventDate = computed(() => {
       return timelineData.value?.firstEvent?.eventDate || null;
@@ -389,6 +406,7 @@ export default {
       refreshKey,
       documentTitle,
       documentType,
+      documentPath,
       firstEventDate,
       lastEventDate,
       totalDuration,
