@@ -52,7 +52,7 @@ async function getAuditByUuid(uuid, options = {}) {
 
 /**
  * Get audit events by document title
- * @param {string} title - Document title
+ * @param {string} title - Document title (last segment of docPath)
  * @param {Object} options - Query options
  * @returns {Promise<Object>} - Elasticsearch response
  */
@@ -61,7 +61,7 @@ async function getAuditByTitle(title, options = {}) {
   
   const [sortField, sortOrder] = sort.split(':');
   
-  // Using multi_match to search across multiple fields that might contain the title
+  // Using wildcard query to search for docPath ending with the title
   const query = {
     size,
     from,
@@ -69,9 +69,25 @@ async function getAuditByTitle(title, options = {}) {
       { [sortField]: { order: sortOrder || 'asc' } }
     ],
     query: {
-      multi_match: {
-        query: title,
-        fields: ["comment^3", "comment.fulltext^2", "extended.title"]
+      bool: {
+        should: [
+          // Search for docPath ending with the title (path's last segment)
+          {
+            wildcard: {
+              docPath: {
+                value: "*/" + title
+              }
+            }
+          },
+          // Fallback to traditional title search in other fields
+          {
+            multi_match: {
+              query: title,
+              fields: ["comment^3", "comment.fulltext^2", "extended.title"]
+            }
+          }
+        ],
+        minimum_should_match: 1
       }
     }
   };

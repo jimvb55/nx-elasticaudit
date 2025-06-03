@@ -4,7 +4,7 @@
       <v-col cols="12" class="text-center">
         <h1 class="text-h3 font-weight-bold text-primary mb-2">Nuxeo Audit Visualization</h1>
         <p class="text-subtitle-1 text-medium-emphasis">
-          Search for a document by UUID or title to visualize its audit history
+          Search for a document by UUID or document name to visualize its audit history
         </p>
       </v-col>
     </v-row>
@@ -26,11 +26,11 @@
               <v-col cols="12" md="6">
                 <v-text-field
                   v-model="searchValue"
-                  :label="searchType === 'uuid' ? 'Enter UUID' : 'Enter title'"
+                  :label="searchType === 'uuid' ? 'Enter UUID' : 'Enter document name'"
                   variant="outlined"
                   density="comfortable"
-                  :placeholder="searchType === 'uuid' ? 'e.g., 123e4567-e89b-12d3-a456-426614174000' : 'e.g., Project Report'"
-                  :hint="searchType === 'uuid' ? 'Document unique identifier' : 'Document title'"
+                  :placeholder="searchType === 'uuid' ? 'e.g., 123e4567-e89b-12d3-a456-426614174000' : 'e.g., 3321046855'"
+                  :hint="searchType === 'uuid' ? 'Document unique identifier' : 'Document name (last part of document path)'"
                   persistent-hint
                   autofocus
                   @keyup.enter="searchDocument"
@@ -65,7 +65,7 @@
             Search Documents
           </v-card-title>
           <v-card-text>
-            Find documents by their UUID or title. The system will search through the Nuxeo audit logs to find matching documents.
+            Find documents by their UUID or document name (the last part of the document path, e.g., "3321046855"). The system will search through the Nuxeo audit logs to find matching documents.
           </v-card-text>
         </v-card>
       </v-col>
@@ -112,7 +112,7 @@ export default {
     
     const searchOptions = [
       { title: 'UUID', value: 'uuid' },
-      { title: 'Title', value: 'title' }
+      { title: 'Document Name', value: 'title' }
     ];
     
     const searchDocument = async () => {
