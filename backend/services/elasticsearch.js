@@ -71,10 +71,10 @@ async function getAuditByTitle(title, options = {}) {
     query: {
       bool: {
         should: [
-          // Search for docPath ending with the title (path's last segment)
+          // Using match_phrase_suffix to find documents where docPath ends with the title
           {
-            wildcard: {
-              docPath: "*/" + title
+            match_phrase_suffix: {
+              docPath: title
             }
           },
           // Fallback to traditional title search in other fields
@@ -91,10 +91,14 @@ async function getAuditByTitle(title, options = {}) {
   };
   
   try {
+    console.log('Search query for title:', JSON.stringify(query, null, 2));
+    
     const response = await elasticsearchClient.post(
       `/${config.elasticsearchIndex}/_search`,
       query
     );
+    
+    console.log('Search response status:', response.status);
     
     // Get unique document IDs from the search results
     const docIds = [...new Set(response.data.hits.hits.map(hit => hit._source.docUUID))];
@@ -137,6 +141,12 @@ async function getAuditByTitle(title, options = {}) {
     };
   } catch (error) {
     console.error('Elasticsearch error:', error.message);
+    if (error.response) {
+      console.error('Error response from Elasticsearch:', {
+        status: error.response.status,
+        data: JSON.stringify(error.response.data, null, 2)
+      });
+    }
     throw new Error(`Failed to retrieve audit events by title: ${error.message}`);
   }
 }
