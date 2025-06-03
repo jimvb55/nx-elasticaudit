@@ -1,5 +1,7 @@
 <template>
-  <div class="bar-chart-container" ref="chartContainer"></div>
+  <div class="bar-chart-container">
+    <canvas ref="chartCanvas" class="chart-canvas"></canvas>
+  </div>
 </template>
 
 <script>
@@ -24,7 +26,7 @@ export default {
   emits: ['mounted'],
   
   setup(props, { emit }) {
-    const chartContainer = ref(null);
+    const chartCanvas = ref(null);
     let chart = null;
     let resizeObserver = null;
 
@@ -71,7 +73,7 @@ export default {
     };
 
     const createChart = () => {
-      if (!chartContainer.value || !props.timelineData) return;
+      if (!chartCanvas.value || !props.timelineData) return;
       
       const { timeline, firstEvent, lastEvent, totalDurationMs } = props.timelineData;
       
@@ -87,7 +89,14 @@ export default {
         chart.destroy();
       }
       
-      const ctx = chartContainer.value.getContext('2d');
+      const ctx = chartCanvas.value.getContext('2d');
+      
+      if (!ctx) {
+        console.error('Failed to get 2D context from canvas');
+        return;
+      }
+      
+      console.log('Successfully obtained 2D context for bar chart');
       
       // Create data for stacked horizontal bar chart
       const datasets = [];
@@ -223,8 +232,12 @@ export default {
         }
       });
       
-      if (chartContainer.value) {
-        resizeObserver.observe(chartContainer.value);
+      if (chartCanvas.value) {
+        const parent = chartCanvas.value.parentElement;
+        if (parent) {
+          resizeObserver.observe(parent);
+          console.log('Resize observer attached to bar chart parent');
+        }
       }
       
       // Create chart with a short delay to ensure DOM is ready
@@ -264,7 +277,7 @@ export default {
     });
     
     return {
-      chartContainer
+      chartCanvas
     };
   }
 };
@@ -275,5 +288,10 @@ export default {
   width: 100%;
   height: v-bind('height + "px"');
   position: relative;
+}
+
+.chart-canvas {
+  width: 100% !important;
+  height: 100% !important;
 }
 </style>
