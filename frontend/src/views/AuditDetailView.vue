@@ -112,6 +112,10 @@
                   <v-icon>mdi-chart-timeline-variant</v-icon>
                   <span class="ml-1 d-none d-sm-inline">Timeline</span>
                 </v-btn>
+                <v-btn value="debug">
+                  <v-icon>mdi-bug-outline</v-icon>
+                  <span class="ml-1 d-none d-sm-inline">Debug</span>
+                </v-btn>
               </v-btn-toggle>
             </v-card-title>
             <v-card-text>
@@ -121,7 +125,7 @@
                 </div>
                 
                 <component 
-                  :is="chartType === 'timeline' ? TimelineChart : BarChart"
+                  :is="getChartComponent()"
                   :timeline-data="timelineData"
                   :height="400"
                   :key="`chart-${refreshKey}-${chartType}`"
@@ -195,12 +199,14 @@ import { useRoute, useRouter } from 'vue-router';
 import api from '@/services/api';
 import TimelineChart from '@/components/TimelineChart.vue';
 import BarChart from '@/components/BarChart.vue';
+import DebugChart from '@/components/DebugChart.vue';
 
 export default {
   name: 'AuditDetailView',
   components: {
     TimelineChart,
-    BarChart
+    BarChart,
+    DebugChart
   },
   props: {
     uuid: {
@@ -342,6 +348,20 @@ export default {
       refreshKey.value++;
     });
     
+    // Get chart component based on selected type
+    const getChartComponent = () => {
+      switch (chartType.value) {
+        case 'timeline':
+          return TimelineChart;
+        case 'bar':
+          return BarChart;
+        case 'debug':
+          return DebugChart;
+        default:
+          return BarChart;
+      }
+    };
+    
     // Handle chart mounted event
     const onChartMounted = () => {
       console.log('Chart mounted event received');
@@ -375,6 +395,7 @@ export default {
       eventHeaders,
       formatDateTime,
       getEventColor,
+      getChartComponent,
       handlePaginationUpdate,
       goBackToSearch,
       onChartMounted
