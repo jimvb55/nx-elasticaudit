@@ -130,19 +130,24 @@ export default {
             legend: {
               display: false
             },
-            tooltip: {
-              callbacks: {
-                label: (context) => {
-                  const index = context.dataIndex;
-                  return [
-                    eventLabels[index],
-                    `Duration: ${formatDuration(durations[index])}`,
-                    `Start: ${new Date(timeline[index].startTime).toLocaleString()}`,
-                    `End: ${new Date(timeline[index].endTime).toLocaleString()}`
-                  ];
+              tooltip: {
+                callbacks: {
+                  label: (context) => {
+                    const index = context.dataIndex;
+                    const startUser = timeline[index].startEvent.principalName || 'Unknown';
+                    const endUser = timeline[index].endEvent.principalName || 'Unknown';
+                    
+                    return [
+                      eventLabels[index],
+                      `Duration: ${formatDuration(durations[index])}`,
+                      `Start: ${new Date(timeline[index].startTime).toLocaleString()}`,
+                      `End: ${new Date(timeline[index].endTime).toLocaleString()}`,
+                      `Start User: ${startUser}`,
+                      `End User: ${endUser}`
+                    ];
+                  }
                 }
               }
-            }
           },
           scales: {
             y: {
