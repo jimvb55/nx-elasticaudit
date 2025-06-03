@@ -61,6 +61,11 @@ async function getAuditByTitle(title, options = {}) {
   
   const [sortField, sortOrder] = sort.split(':');
   
+  // Check if title is empty or contains invalid characters
+  if (!title || title.trim() === '') {
+    throw new Error('Search term cannot be empty');
+  }
+  
   // Using wildcard query to search for docPath ending with the title
   const query = {
     size,
@@ -69,23 +74,8 @@ async function getAuditByTitle(title, options = {}) {
       { [sortField]: { order: sortOrder || 'asc' } }
     ],
     query: {
-      bool: {
-        should: [
-          // Using wildcard to find documents where docPath ends with the title
-          {
-            wildcard: {
-              docPath: "*/" + title
-            }
-          },
-          // Fallback to traditional title search in other fields
-          {
-            multi_match: {
-              query: title,
-              fields: ["comment^3", "comment.fulltext^2", "extended.title"]
-            }
-          }
-        ],
-        minimum_should_match: 1
+      wildcard: {
+        docPath: "*/" + title
       }
     }
   };
