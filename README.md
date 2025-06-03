@@ -141,7 +141,30 @@ The application follows a modern, scalable architecture:
    npm run dev
    ```
 
-4. Access the development server at `http://localhost:8081`
+4. Access the development server at `http://localhost:8080`
+
+### Quick Start
+
+For convenience, a script is provided to start both frontend and backend servers together:
+
+```bash
+./start-dev.sh
+```
+
+This script will:
+- Start both servers in development mode
+- Display local and network URLs for accessing the application
+- Set up proper logging in the logs directory
+- Provide a single control point (Ctrl+C) to stop all services
+
+### Network Access
+
+After the recent configuration updates, you can now access the development servers from other devices on your network:
+
+- The frontend will be available at `http://<your-machine-ip>:8080`
+- The backend API will be available at `http://<your-machine-ip>:3000`
+
+This is useful for testing on multiple devices or sharing your development instance with team members on the same network.
 
 ## 📈 Usage
 

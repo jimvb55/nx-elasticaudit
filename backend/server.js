@@ -7,7 +7,11 @@ const auditRoutes = require('./routes/audit');
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: '*', // In production, specify allowed origins more restrictively
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use(morgan('dev'));
 
@@ -29,8 +33,9 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = config.port || 3000;
+const HOST = '0.0.0.0'; // Listen on all network interfaces
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`Server running on ${HOST}:${PORT}`);
   console.log(`Elasticsearch endpoint: ${config.elasticsearchUrl}`);
 });

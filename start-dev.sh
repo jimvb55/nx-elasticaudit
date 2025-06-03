@@ -35,8 +35,8 @@ echo -e "${GREEN}Frontend started with PID ${FRONTEND_PID}${NC}"
 echo -e "${YELLOW}Frontend logs: tail -f logs/frontend.log${NC}"
 
 echo -e "${GREEN}Development environment started successfully!${NC}"
-echo -e "${YELLOW}Frontend:${NC} http://localhost:8080"
-echo -e "${YELLOW}Backend:${NC} http://localhost:3000"
+echo -e "${YELLOW}Frontend:${NC} http://localhost:8080 (Network: http://$(hostname -I | awk '{print $1}'):8080)"
+echo -e "${YELLOW}Backend:${NC} http://localhost:3000 (Network: http://$(hostname -I | awk '{print $1}'):3000)"
 echo ""
 echo -e "${YELLOW}Press Ctrl+C to stop all servers${NC}"
 
