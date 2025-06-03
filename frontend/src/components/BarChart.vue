@@ -72,7 +72,12 @@ export default {
       
       const { timeline, firstEvent, lastEvent, totalDurationMs } = props.timelineData;
       
-      if (!timeline || !timeline.length) return;
+      if (!timeline || !timeline.length) {
+        console.warn('Timeline data is empty or invalid for bar chart');
+        return;
+      }
+      
+      console.log('Creating bar chart with data:', timeline);
       
       // Destroy previous chart if it exists
       if (chart) {
@@ -204,12 +209,25 @@ export default {
     };
     
     onMounted(() => {
-      createChart();
+      // Use setTimeout to ensure DOM is fully rendered
+      setTimeout(() => {
+        createChart();
+      }, 100);
     });
     
+    // Watch both the entire timeline data object and any nested changes
     watch(() => props.timelineData, () => {
-      createChart();
+      setTimeout(() => {
+        createChart();
+      }, 100);
     }, { deep: true });
+    
+    // Additional watch for component height changes
+    watch(() => props.height, () => {
+      setTimeout(() => {
+        createChart();
+      }, 100);
+    });
     
     return {
       chartContainer

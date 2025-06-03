@@ -29,7 +29,7 @@
               <v-icon size="large" color="primary" class="mr-2">mdi-file-document-outline</v-icon>
               Document Details
               <v-spacer></v-spacer>
-              <v-btn @click="$router.push('/')" variant="text" prepend-icon="mdi-arrow-left">
+              <v-btn @click="goBackToSearch" variant="text" prepend-icon="mdi-arrow-left">
                 Back to Search
               </v-btn>
             </v-card-title>
@@ -103,27 +103,40 @@
               <v-icon size="large" color="primary" class="mr-2">mdi-chart-timeline-variant</v-icon>
               Audit Timeline
               <v-spacer></v-spacer>
-              <v-btn-toggle v-model="chartType" mandatory>
+              <v-btn-toggle v-model="chartType" mandatory density="comfortable">
                 <v-btn value="bar">
                   <v-icon>mdi-chart-bar</v-icon>
+                  <span class="ml-1 d-none d-sm-inline">Bar Chart</span>
                 </v-btn>
                 <v-btn value="timeline">
                   <v-icon>mdi-chart-timeline-variant</v-icon>
+                  <span class="ml-1 d-none d-sm-inline">Timeline</span>
                 </v-btn>
               </v-btn-toggle>
             </v-card-title>
             <v-card-text>
               <div class="chart-container">
-                <TimelineChart 
-                  v-if="timelineData && chartType === 'timeline'" 
-                  :timeline-data="timelineData"
-                  :height="400"
-                />
-                <BarChart 
-                  v-if="timelineData && chartType === 'bar'" 
-                  :timeline-data="timelineData"
-                  :height="400"
-                />
+                <Suspense>
+                  <template #default>
+                    <TimelineChart
+                      v-if="chartType === 'timeline'"
+                      :timeline-data="timelineData"
+                      :height="400"
+                      :key="`timeline-chart-${refreshKey}`"
+                    />
+                    <BarChart
+                      v-else
+                      :timeline-data="timelineData"
+                      :height="400"
+                      :key="`bar-chart-${refreshKey}`"
+                    />
+                  </template>
+                  <template #fallback>
+                    <div class="d-flex justify-center align-center" style="height: 400px">
+                      <v-progress-circular indeterminate color="primary"></v-progress-circular>
+                    </div>
+                  </template>
+                </Suspense>
               </div>
               <div class="text-center text-caption mt-2">
                 Timeline showing document lifecycle events and duration between operations
@@ -163,6 +176,7 @@
                 class="elevation-1"
                 :items-per-page="10"
                 :items-per-page-options="[10, 20, 50, 100]"
+                @update:options="handlePaginationUpdate"
               >
                 <template v-slot:item.eventDate="{ item }">
                   {{ formatDateTime(item.eventDate) }}
@@ -186,8 +200,8 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import api from '@/services/api';
 import TimelineChart from '@/components/TimelineChart.vue';
 import BarChart from '@/components/BarChart.vue';
@@ -204,16 +218,23 @@ export default {
       required: true
     }
   },
-  
+
   setup(props) {
     const route = useRoute();
+    const router = useRouter();
     const isLoading = ref(true);
     const error = ref(null);
     const timelineData = ref(null);
     const events = ref([]);
     const search = ref('');
     const chartType = ref('bar');
-    
+    const pagination = ref({
+      page: 1,
+      itemsPerPage: 10,
+      sortBy: [{ key: 'eventDate', order: 'asc' }]
+    });
+    const refreshKey = ref(0);
+
     // Computed properties for document info
     const documentTitle = computed(() => {
       if (!events.value || !events.value.length) return null;
@@ -223,24 +244,24 @@ export default {
       }
       return null;
     });
-    
+
     const documentType = computed(() => {
       if (!events.value || !events.value.length) return null;
       return events.value[0]?.docType || null;
     });
-    
+
     const firstEventDate = computed(() => {
       return timelineData.value?.firstEvent?.eventDate || null;
     });
-    
+
     const lastEventDate = computed(() => {
       return timelineData.value?.lastEvent?.eventDate || null;
     });
-    
+
     const totalDuration = computed(() => {
       return timelineData.value?.totalDurationFormatted || null;
     });
-    
+
     // Table headers
     const eventHeaders = [
       { title: 'Event Date', key: 'eventDate', sortable: true },
@@ -249,21 +270,21 @@ export default {
       { title: 'Document Lifecycle', key: 'docLifeCycle', sortable: true },
       { title: 'Category', key: 'category', sortable: true }
     ];
-    
+
     // Methods
     const loadAuditData = async () => {
       isLoading.value = true;
       error.value = null;
-      
+
       try {
         const [timelineResponse, eventsResponse] = await Promise.all([
           api.getAuditTimeline(props.uuid),
           api.getAuditByUuid(props.uuid, { size: 1000, sort: 'eventDate:asc' })
         ]);
-        
+
         timelineData.value = timelineResponse.data;
         events.value = eventsResponse.data.events;
-        
+
         if (events.value.length === 0) {
           error.value = 'No audit events found for this document.';
         }
@@ -274,7 +295,22 @@ export default {
         isLoading.value = false;
       }
     };
-    
+
+    const handlePaginationUpdate = (options) => {
+      pagination.value = {
+        page: options.page,
+        itemsPerPage: options.itemsPerPage
+      };
+    };
+
+    const goBackToSearch = () => {
+      if (route.query.from === 'search' && route.query.q) {
+        router.push({ name: 'Search', params: { query: route.query.q } });
+      } else {
+        router.push('/');
+      }
+    };
+
     const formatDateTime = (dateString) => {
       if (!dateString) return '';
       const date = new Date(dateString);
@@ -287,7 +323,7 @@ export default {
         second: '2-digit'
       }).format(date);
     };
-    
+
     const getEventColor = (eventId) => {
       const eventColors = {
         'documentCreated': 'success',
@@ -301,15 +337,23 @@ export default {
         'loginSuccess': 'purple',
         'downloadRequest': 'blue'
       };
-      
+
       return eventColors[eventId] || 'primary';
     };
-    
+
+    // Watch for chart type changes to force re-render
+    watch(chartType, async (newVal) => {
+      console.log(`Chart type changed to: ${newVal}`);
+      // Increment refresh key to force component re-render
+      await nextTick();
+      refreshKey.value++;
+    });
+
     // Load data on component mount
     onMounted(() => {
       loadAuditData();
     });
-    
+
     return {
       isLoading,
       error,
@@ -317,6 +361,8 @@ export default {
       events,
       search,
       chartType,
+      pagination,
+      refreshKey,
       documentTitle,
       documentType,
       firstEventDate,
@@ -324,7 +370,9 @@ export default {
       totalDuration,
       eventHeaders,
       formatDateTime,
-      getEventColor
+      getEventColor,
+      handlePaginationUpdate,
+      goBackToSearch
     };
   }
 };

@@ -29,7 +29,7 @@
 
 <script>
 import { useTheme } from 'vuetify';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 
 export default {
   name: 'App',
@@ -38,20 +38,38 @@ export default {
     const isDarkTheme = computed(() => theme.global.name.value === 'dark');
 
     const toggleTheme = () => {
+      console.log('Toggle theme from', theme.global.name.value);
       theme.global.name.value = isDarkTheme.value ? 'light' : 'dark';
+      console.log('Toggle theme to', theme.global.name.value);
       localStorage.setItem('theme', theme.global.name.value);
     };
 
     // Initialize theme from localStorage
     const initTheme = () => {
       const savedTheme = localStorage.getItem('theme');
+      console.log('Saved theme from localStorage:', savedTheme);
       if (savedTheme) {
         theme.global.name.value = savedTheme;
+      } else {
+        // Default to light theme if not specified
+        theme.global.name.value = 'light';
+        localStorage.setItem('theme', 'light');
       }
     };
 
+    // Watch for theme changes to sync with localStorage
+    watch(() => theme.global.name.value, (newTheme) => {
+      console.log('Theme changed to:', newTheme);
+      localStorage.setItem('theme', newTheme);
+      document.documentElement.setAttribute('data-theme', newTheme);
+    });
+
     // Call on mount
-    initTheme();
+    onMounted(() => {
+      initTheme();
+      // Apply theme to document for any CSS that might rely on it
+      document.documentElement.setAttribute('data-theme', theme.global.name.value);
+    });
 
     return {
       isDarkTheme,
