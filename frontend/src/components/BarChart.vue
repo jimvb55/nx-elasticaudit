@@ -165,18 +165,21 @@ export default {
                 title: (tooltipItems) => {
                   return eventLabels[tooltipItems[0].datasetIndex];
                 },
-                label: (context) => {
-                  const duration = durations[context.datasetIndex];
-                  const startEvent = timeline[context.datasetIndex]?.startEvent;
-                  const endEvent = timeline[context.datasetIndex]?.endEvent;
-                  
-                  return [
-                    `Duration: ${formatDuration(duration)}`,
-                    `Start: ${new Date(startEvent?.eventDate).toLocaleString()}`,
-                    `End: ${new Date(endEvent?.eventDate).toLocaleString()}`,
-                    `User: ${startEvent?.principalName || 'Unknown'}`
-                  ];
-                }
+                  label: (context) => {
+                    const duration = durations[context.datasetIndex];
+                    const startEvent = timeline[context.datasetIndex]?.startEvent;
+                    const endEvent = timeline[context.datasetIndex]?.endEvent;
+                    const startUser = startEvent?.principalName || 'Unknown';
+                    const endUser = endEvent?.principalName || 'Unknown';
+                    
+                    return [
+                      `Duration: ${formatDuration(duration)}`,
+                      `Start: ${new Date(startEvent?.eventDate).toLocaleString()}`,
+                      `End: ${new Date(endEvent?.eventDate).toLocaleString()}`,
+                      `Start User: ${startUser}`,
+                      `End User: ${endUser}`
+                    ];
+                  }
               }
             },
             legend: {
