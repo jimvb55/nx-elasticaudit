@@ -8,7 +8,7 @@
 
 A professional, dockerized web application for visualizing Nuxeo audit logs stored in Elasticsearch. This application provides powerful insights into document lifecycles through beautiful visualizations and detailed audit trails.
 
-![Application Screenshot](./Screenshot_nxes.jpg)
+![Application Screenshot](./Screenshot_nxes.png)
 
 ## ✨ Key Benefits
 
