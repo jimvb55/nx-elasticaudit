@@ -6,7 +6,6 @@
 import { ref, onMounted, watch, onBeforeUnmount } from 'vue';
 import { Chart, registerables } from 'chart.js';
 import 'chartjs-adapter-date-fns';
-import { de } from 'date-fns/locale';
 
 // Register all Chart.js components
 Chart.register(...registerables);
@@ -28,6 +27,7 @@ export default {
   setup(props, { emit }) {
     const chartContainer = ref(null);
     let chart = null;
+    let resizeObserver = null;
 
     const eventColors = {
       'documentCreated': '#4CAF50',      // Green
@@ -160,17 +160,29 @@ export default {
     };
     
     onMounted(() => {
-      // Use nextTick to ensure DOM is fully rendered and be more Vue-idiomatic
-      createChart();
+      console.log('TimelineChart component mounted');
       
-      // Force a resize event to ensure chart renders correctly in containers
-      window.dispatchEvent(new Event('resize'));
+      // Create resize observer to monitor container size changes
+      resizeObserver = new ResizeObserver(() => {
+        console.log('TimelineChart container resized');
+        if (chart) {
+          chart.resize();
+          console.log('TimelineChart resized');
+        }
+      });
       
-      // Emit mounted event after a longer delay to ensure chart is visible
+      if (chartContainer.value) {
+        resizeObserver.observe(chartContainer.value);
+      }
+      
+      // Create chart with a short delay to ensure DOM is ready
       setTimeout(() => {
+        createChart();
+        
+        // Emit mounted event after chart is created
         console.log('TimelineChart emitting mounted event');
         emit('mounted');
-      }, 500);
+      }, 300);
     });
     
     // Watch both the entire timeline data object and any nested changes
@@ -192,6 +204,10 @@ export default {
       if (chart) {
         chart.destroy();
         chart = null;
+      }
+      
+      if (resizeObserver) {
+        resizeObserver.disconnect();
       }
     });
     

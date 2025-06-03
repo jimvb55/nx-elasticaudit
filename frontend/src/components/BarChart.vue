@@ -26,6 +26,7 @@ export default {
   setup(props, { emit }) {
     const chartContainer = ref(null);
     let chart = null;
+    let resizeObserver = null;
 
     const eventColors = {
       'documentCreated': '#4CAF50',      // Green
@@ -211,17 +212,29 @@ export default {
     };
     
     onMounted(() => {
-      // Create chart immediately
-      createChart();
+      console.log('BarChart component mounted');
       
-      // Force a resize event to ensure chart renders correctly in containers
-      window.dispatchEvent(new Event('resize'));
+      // Create resize observer to monitor container size changes
+      resizeObserver = new ResizeObserver(() => {
+        console.log('BarChart container resized');
+        if (chart) {
+          chart.resize();
+          console.log('BarChart resized');
+        }
+      });
       
-      // Emit mounted event after a longer delay to ensure chart is visible
+      if (chartContainer.value) {
+        resizeObserver.observe(chartContainer.value);
+      }
+      
+      // Create chart with a short delay to ensure DOM is ready
       setTimeout(() => {
+        createChart();
+        
+        // Emit mounted event after chart is created
         console.log('BarChart emitting mounted event');
         emit('mounted');
-      }, 500);
+      }, 300);
     });
     
     // Watch both the entire timeline data object and any nested changes
@@ -243,6 +256,10 @@ export default {
       if (chart) {
         chart.destroy();
         chart = null;
+      }
+      
+      if (resizeObserver) {
+        resizeObserver.disconnect();
       }
     });
     
