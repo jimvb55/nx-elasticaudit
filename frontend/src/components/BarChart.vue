@@ -217,10 +217,11 @@ export default {
       // Force a resize event to ensure chart renders correctly in containers
       window.dispatchEvent(new Event('resize'));
       
-      // Emit mounted event
+      // Emit mounted event after a longer delay to ensure chart is visible
       setTimeout(() => {
+        console.log('BarChart emitting mounted event');
         emit('mounted');
-      }, 100);
+      }, 500);
     });
     
     // Watch both the entire timeline data object and any nested changes

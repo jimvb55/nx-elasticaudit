@@ -344,8 +344,12 @@ export default {
     
     // Handle chart mounted event
     const onChartMounted = () => {
-      console.log('Chart mounted');
-      isChartLoading.value = false;
+      console.log('Chart mounted event received');
+      // Use a small delay to ensure the chart is fully rendered
+      setTimeout(() => {
+        isChartLoading.value = false;
+        console.log('Chart loading state set to false');
+      }, 200);
     };
 
     // Load data on component mount
