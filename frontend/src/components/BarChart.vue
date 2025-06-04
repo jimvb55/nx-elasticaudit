@@ -122,13 +122,20 @@ export default {
         currentPosition += item.durationMs;
       });
       
-      // Create datasets for stacked bar chart
+      // Create datasets for stacked bar chart with enhanced color handling
       durations.forEach((duration, index) => {
+        // Get color for this specific segment
+        const eventId = timeline[index].startEvent.eventId;
+        const color = getEventColor(eventId);
+        
+        console.log(`BarChart dataset ${index}: Event ${eventId} → Color: ${color}`);
+        
+        // Create dataset with explicit color
         const dataset = {
           label: eventLabels[index],
           data: [duration],
-          backgroundColor: colors[index],
-          borderColor: colors[index],
+          backgroundColor: color,
+          borderColor: color,
           borderWidth: 1,
           barPercentage: 0.8,
           categoryPercentage: 0.9,
@@ -243,7 +250,9 @@ export default {
     });
     
     // Watch both the entire timeline data object and any nested changes
-    watch(() => props.timelineData, () => {
+    watch(() => props.timelineData, (newData) => {
+      console.log('BarChart detected timelineData change:', 
+        newData ? `Timeline with ${newData.timeline.length} items` : 'No data');
       createChart();
       // Force a resize event to ensure chart renders correctly
       window.dispatchEvent(new Event('resize'));

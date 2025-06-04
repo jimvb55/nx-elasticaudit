@@ -91,23 +91,28 @@ export default {
         return color;
       });
       
+      // Create individual datasets for each point with its own color
+      const datasets = [];
+      
+      // This approach creates a separate dataset for each point to ensure colors are applied correctly
+      durations.forEach((duration, index) => {
+        datasets.push({
+          label: eventLabels[index],
+          data: Array(labels.length).fill(null).map((_, i) => i === index ? duration : null),
+          backgroundColor: backgroundColors[index],
+          borderColor: backgroundColors[index],
+          borderWidth: 2,
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          tension: 0.4
+        });
+      });
+      
       chart = new Chart(ctx, {
         type: 'line',
         data: {
           labels,
-          datasets: [
-            {
-              label: 'Time Between Events',
-              data: durations,
-              backgroundColor: backgroundColors,
-              borderColor: backgroundColors,
-              borderWidth: 2,
-              fill: false,
-              pointRadius: 6,
-              pointHoverRadius: 8,
-              tension: 0.4
-            }
-          ]
+          datasets
         },
         options: {
           responsive: true,
@@ -190,7 +195,19 @@ export default {
     });
     
     // Watch both the entire timeline data object and any nested changes
-    watch(() => props.timelineData, () => {
+    watch(() => props.timelineData, (newData) => {
+      console.log('TimelineChart detected timelineData change:', 
+        newData ? `Timeline with ${newData.timeline.length} items` : 'No data');
+      
+      // Debugging info about colors
+      if (newData && newData.timeline) {
+        newData.timeline.forEach((item, index) => {
+          const eventId = item.startEvent.eventId;
+          const color = getEventColor(eventId);
+          console.log(`TimelineChart item ${index}: Event ${eventId} → Color: ${color}`);
+        });
+      }
+      
       createChart();
       // Force a resize event to ensure chart renders correctly
       window.dispatchEvent(new Event('resize'));

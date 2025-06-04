@@ -151,9 +151,12 @@
               </div>
               <div class="text-center text-caption mt-2">
                 Timeline showing document lifecycle events and duration between operations
-                <v-chip size="x-small" color="info" class="ml-2" v-if="!showAllEvents && timelineData && filteredTimelineData">
-                  {{ timelineData.timeline.length - filteredTimelineData.timeline.length }} events hidden
-                </v-chip>
+      <v-chip size="x-small" color="info" class="ml-2" v-if="!showAllEvents && timelineData && filteredTimelineData">
+        {{ timelineData.timeline.length - filteredTimelineData.timeline.length }} events hidden
+      </v-chip>
+      <span class="ml-2 text-caption" v-if="timelineData && filteredTimelineData">
+        ({{ filteredTimelineData.timeline.length }} events shown)
+      </span>
               </div>
             </v-card-text>
           </v-card>
@@ -271,28 +274,56 @@ export default {
     // Computed property for filtered timeline data
     const filteredTimelineData = computed(() => {
       if (!timelineData.value) return null;
-      if (showAllEvents.value) return timelineData.value;
+      if (showAllEvents.value) {
+        console.log(`Showing all timeline items: ${timelineData.value.timeline.length} total`);
+        return timelineData.value;
+      }
       
       // Create a filtered copy of the timeline data
       const filtered = {
         ...timelineData.value,
-        timeline: timelineData.value.timeline.filter(item => 
-          // Use our enhanced filtering logic in the utility
-          !isFilteredEvent(item.startEvent.eventId) && 
-          !isFilteredEvent(item.endEvent.eventId)
-        )
+        timeline: timelineData.value.timeline.filter(item => {
+          const startFiltered = isFilteredEvent(item.startEvent.eventId);
+          const endFiltered = isFilteredEvent(item.endEvent.eventId);
+          
+          // Keep the item only if neither event is filtered
+          const keepItem = !startFiltered && !endFiltered;
+          
+          if (!keepItem) {
+            console.log(`Filtering out timeline item: ${item.startEvent.eventId} → ${item.endEvent.eventId}`);
+          }
+          
+          return keepItem;
+        })
       };
       
       console.log(`Filtering timeline: ${timelineData.value.timeline.length} items -> ${filtered.timeline.length} items`);
+      console.log('Filtered timeline events:', filtered.timeline.map(item => 
+        `${item.startEvent.eventId} → ${item.endEvent.eventId}`
+      ));
+      
       return filtered;
     });
     
     // Computed property for filtered events table
     const filteredEvents = computed(() => {
-      if (showAllEvents.value) return events.value;
+      if (showAllEvents.value) {
+        console.log(`Showing all events table: ${events.value.length} total`);
+        return events.value;
+      }
+      
       // Use our enhanced filtering logic in the utility
-      const filtered = events.value.filter(event => !isFilteredEvent(event.eventId));
+      const filtered = events.value.filter(event => {
+        const isFiltered = isFilteredEvent(event.eventId);
+        if (isFiltered) {
+          console.log(`Filtering out event: ${event.eventId}`);
+        }
+        return !isFiltered;
+      });
+      
       console.log(`Filtering events table: ${events.value.length} events -> ${filtered.length} events`);
+      console.log('Filtered event IDs:', filtered.map(event => event.eventId));
+      
       return filtered;
     });
 
@@ -422,6 +453,16 @@ export default {
     // Watch for chart type changes to force re-render
     watch(chartType, async (newVal) => {
       console.log(`Chart type changed to: ${newVal}`);
+      // Show loading state while chart changes
+      isChartLoading.value = true;
+      // Increment refresh key to force component re-render
+      await nextTick();
+      refreshKey.value++;
+    });
+    
+    // Also watch for showAllEvents changes to force re-render with new refresh key
+    watch(showAllEvents, async (newVal) => {
+      console.log(`Show all events changed to: ${newVal}`);
       // Show loading state while chart changes
       isChartLoading.value = true;
       // Increment refresh key to force component re-render
