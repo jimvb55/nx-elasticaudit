@@ -274,35 +274,47 @@ export default {
     // Computed property for filtered timeline data
     const filteredTimelineData = computed(() => {
       if (!timelineData.value) return null;
-      if (showAllEvents.value) {
-        console.log(`Showing all timeline items: ${timelineData.value.timeline.length} total`);
-        return timelineData.value;
-      }
-      
-      // Create a filtered copy of the timeline data
-      const filtered = {
-        ...timelineData.value,
-        timeline: timelineData.value.timeline.filter(item => {
-          const startFiltered = isFilteredEvent(item.startEvent.eventId);
-          const endFiltered = isFilteredEvent(item.endEvent.eventId);
-          
-          // Keep the item only if neither event is filtered
-          const keepItem = !startFiltered && !endFiltered;
-          
-          if (!keepItem) {
-            console.log(`Filtering out timeline item: ${item.startEvent.eventId} → ${item.endEvent.eventId}`);
-          }
-          
-          return keepItem;
-        })
+
+      // Local helper to format duration similar to backend
+      const formatDurationLocal = (ms) => {
+        if (ms < 1000) return `${ms}ms`;
+        const seconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+        if (days > 0) return `${days}d ${hours % 24}h ${minutes % 60}m`;
+        if (hours > 0) return `${hours}h ${minutes % 60}m ${seconds % 60}s`;
+        if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
+        return `${seconds}s`;
       };
-      
-      console.log(`Filtering timeline: ${timelineData.value.timeline.length} items -> ${filtered.timeline.length} items`);
-      console.log('Filtered timeline events:', filtered.timeline.map(item => 
-        `${item.startEvent.eventId} → ${item.endEvent.eventId}`
-      ));
-      
-      return filtered;
+
+      const eventsForTimeline = showAllEvents.value
+        ? events.value
+        : events.value.filter(event => !isFilteredEvent(event.eventId));
+
+      const timeline = eventsForTimeline.map((event, index) => {
+        const nextEvent = eventsForTimeline[index + 1];
+        const startTime = new Date(event.eventDate);
+        const endTime = nextEvent ? new Date(nextEvent.eventDate) : startTime;
+        const durationMs = endTime - startTime;
+
+        return {
+          startEvent: event,
+          endEvent: nextEvent || event,
+          startTime: startTime.toISOString(),
+          endTime: endTime.toISOString(),
+          durationMs,
+          durationFormatted: formatDurationLocal(durationMs)
+        };
+      });
+
+      if (showAllEvents.value) {
+        console.log(`Showing all timeline items: ${timeline.length} total`);
+      } else {
+        console.log(`Filtering timeline: ${timelineData.value.timeline.length} items -> ${timeline.length} items`);
+      }
+
+      return { ...timelineData.value, timeline };
     });
     
     // Computed property for filtered events table
