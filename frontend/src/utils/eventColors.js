@@ -63,6 +63,19 @@ const additionalEventColors = {
 // Default color for any unspecified event types
 const defaultColor = '#1976D2';      // Default Blue
 
+// Cache for dynamically generated colors
+const dynamicEventColors = {};
+
+// Generate a deterministic color based on a string
+function stringToColor(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hue = Math.abs(hash) % 360;
+  return `hsl(${hue}, 65%, 55%)`;
+}
+
 // Combine all color mappings
 const eventColors = {
   ...mainEventColors,
@@ -106,8 +119,11 @@ export function getEventColor(eventId) {
   }
   
   // No match found, return default color
-  console.log(`getEventColor no match for '${eventId}', returning default color: ${defaultColor}`);
-  return defaultColor;
+  console.log(`getEventColor no match for '${eventId}', generating dynamic color`);
+  if (!dynamicEventColors[eventId]) {
+    dynamicEventColors[eventId] = stringToColor(eventId);
+  }
+  return dynamicEventColors[eventId];
 }
 
 /**
