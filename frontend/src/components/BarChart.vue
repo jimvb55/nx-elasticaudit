@@ -111,7 +111,9 @@ export default {
       timeline.forEach((item, index) => {
         startPositions.push(currentPosition);
         durations.push(item.durationMs);
-        colors.push(getEventColor(item.startEvent.eventId));
+        const color = getEventColor(item.startEvent.eventId);
+        colors.push(color);
+        console.log(`BarChart color for event ${item.startEvent.eventId}: ${color}`);
         eventLabels.push(`${item.startEvent.eventId} → ${item.endEvent.eventId} (${item.durationFormatted})`);
         currentPosition += item.durationMs;
       });

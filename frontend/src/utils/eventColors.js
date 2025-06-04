@@ -64,7 +64,9 @@ const eventColors = {
  * @returns {string} - Hex color code
  */
 export function getEventColor(eventId) {
-  return eventColors[eventId] || defaultColor;
+  const color = eventColors[eventId] || defaultColor;
+  console.log(`getEventColor called for '${eventId}', returning color: ${color}`);
+  return color;
 }
 
 /**

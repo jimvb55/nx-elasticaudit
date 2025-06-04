@@ -83,9 +83,11 @@ export default {
         `${event.startEvent.eventId} → ${event.endEvent.eventId} (${event.durationFormatted})`
       );
       
-      const backgroundColors = timeline.map(event => 
-        getEventColor(event.startEvent.eventId)
-      );
+      const backgroundColors = timeline.map(event => {
+        const color = getEventColor(event.startEvent.eventId);
+        console.log(`TimelineChart color for event ${event.startEvent.eventId}: ${color}`);
+        return color;
+      });
       
       chart = new Chart(ctx, {
         type: 'line',
