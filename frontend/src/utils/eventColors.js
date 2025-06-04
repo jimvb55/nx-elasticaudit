@@ -115,7 +115,13 @@ export function getEventColor(eventId) {
  * @returns {string[]} - Array of event IDs that are filtered by default
  */
 export function getFilteredEventTypes() {
-  return Object.keys(filteredEventColors);
+  // Enhanced function to also detect partial matches with filtered events
+  const exactMatches = Object.keys(filteredEventColors);
+  
+  // Log what we're filtering
+  console.log('Filtered event types (exact matches):', exactMatches);
+  
+  return exactMatches;
 }
 
 /**
@@ -124,7 +130,25 @@ export function getFilteredEventTypes() {
  * @returns {boolean} - True if the event is in the filtered list
  */
 export function isFilteredEvent(eventId) {
-  return Object.keys(filteredEventColors).includes(eventId);
+  // If eventId is null or undefined, it's not filtered
+  if (!eventId) return false;
+  
+  // First check for exact match
+  if (Object.keys(filteredEventColors).includes(eventId)) {
+    console.log(`Event ${eventId} is filtered (exact match)`);
+    return true;
+  }
+  
+  // Also check for partial matches to be consistent with our color matching
+  const lowerEventId = eventId.toLowerCase();
+  for (const key of Object.keys(filteredEventColors)) {
+    if (lowerEventId.includes(key.toLowerCase())) {
+      console.log(`Event ${eventId} is filtered (contains ${key})`);
+      return true;
+    }
+  }
+  
+  return false;
 }
 
 /**

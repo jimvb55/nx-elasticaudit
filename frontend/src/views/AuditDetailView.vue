@@ -277,18 +277,23 @@ export default {
       const filtered = {
         ...timelineData.value,
         timeline: timelineData.value.timeline.filter(item => 
-          !filteredEventTypes.includes(item.startEvent.eventId) && 
-          !filteredEventTypes.includes(item.endEvent.eventId)
+          // Use our enhanced filtering logic in the utility
+          !isFilteredEvent(item.startEvent.eventId) && 
+          !isFilteredEvent(item.endEvent.eventId)
         )
       };
       
+      console.log(`Filtering timeline: ${timelineData.value.timeline.length} items -> ${filtered.timeline.length} items`);
       return filtered;
     });
     
     // Computed property for filtered events table
     const filteredEvents = computed(() => {
       if (showAllEvents.value) return events.value;
-      return events.value.filter(event => !filteredEventTypes.includes(event.eventId));
+      // Use our enhanced filtering logic in the utility
+      const filtered = events.value.filter(event => !isFilteredEvent(event.eventId));
+      console.log(`Filtering events table: ${events.value.length} events -> ${filtered.length} events`);
+      return filtered;
     });
 
     // Computed properties for document info
