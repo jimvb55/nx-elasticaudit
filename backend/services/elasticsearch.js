@@ -205,39 +205,33 @@ async function getAuditTimeline(uuid) {
   try {
     // First get all events for the document
     const { events } = await getAuditByUuid(uuid, { size: 1000, sort: 'eventDate:asc' });
-    
+
     if (events.length === 0) {
       return { uuid, events: 0, timeline: [] };
     }
-    
-    // Group events by type and calculate durations
-    const timeline = [];
-    let previousEvent = null;
-    
-    for (const event of events) {
-      if (previousEvent) {
-        const startTime = new Date(previousEvent.eventDate);
-        const endTime = new Date(event.eventDate);
-        const durationMs = endTime - startTime;
-        
-        timeline.push({
-          startEvent: previousEvent,
-          endEvent: event,
-          startTime: startTime.toISOString(),
-          endTime: endTime.toISOString(),
-          durationMs,
-          durationFormatted: formatDuration(durationMs)
-        });
-      }
-      
-      previousEvent = event;
-    }
-    
+
+    // Build timeline entries for every event so the chart count matches the table
+    const timeline = events.map((event, index) => {
+      const nextEvent = events[index + 1];
+      const startTime = new Date(event.eventDate);
+      const endTime = nextEvent ? new Date(nextEvent.eventDate) : startTime;
+      const durationMs = endTime - startTime;
+
+      return {
+        startEvent: event,
+        endEvent: nextEvent || event,
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
+        durationMs,
+        durationFormatted: formatDuration(durationMs)
+      };
+    });
+
     // Calculate total duration
     const firstEvent = events[0];
     const lastEvent = events[events.length - 1];
     const totalDurationMs = new Date(lastEvent.eventDate) - new Date(firstEvent.eventDate);
-    
+
     return {
       uuid,
       events: events.length,
