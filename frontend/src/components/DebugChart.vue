@@ -14,6 +14,7 @@
 <script>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { Chart, registerables } from 'chart.js';
+import { getEventColor } from '@/utils';
 
 // Register all Chart.js components
 Chart.register(...registerables);
@@ -53,6 +54,13 @@ export default {
       
       console.log('Creating debug chart');
       
+      // Test color function directly
+      console.log('Color test results:');
+      console.log('documentCreated:', getEventColor('documentCreated'));
+      console.log('documentModified:', getEventColor('documentModified'));
+      console.log('documentCheckedIn:', getEventColor('documentCheckedIn'));
+      console.log('documentCheckedOut:', getEventColor('documentCheckedOut'));
+      
       // Destroy previous chart if it exists
       if (chart) {
         chart.destroy();
@@ -60,15 +68,30 @@ export default {
       
       const ctx = chartCanvas.value.getContext('2d');
       
-      // Create a simple line chart
+      // Create a simple line chart with our color scheme
       chart = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+          labels: ['documentCreated', 'documentModified', 'documentCheckedIn', 'documentCheckedOut', 'documentLocked', 'documentUnlocked'],
           datasets: [{
-            label: 'Debug Data',
+            label: 'Event Color Test',
             data: [12, 19, 3, 5, 2, 3],
-            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: [
+              getEventColor('documentCreated'),
+              getEventColor('documentModified'),
+              getEventColor('documentCheckedIn'),
+              getEventColor('documentCheckedOut'),
+              getEventColor('documentLocked'),
+              getEventColor('documentUnlocked'),
+            ],
+            borderColor: [
+              getEventColor('documentCreated'),
+              getEventColor('documentModified'),
+              getEventColor('documentCheckedIn'),
+              getEventColor('documentCheckedOut'),
+              getEventColor('documentLocked'),
+              getEventColor('documentUnlocked'),
+            ],
             tension: 0.1
           }]
         },

@@ -231,7 +231,7 @@ import api from '@/services/api';
 import TimelineChart from '@/components/TimelineChart.vue';
 import BarChart from '@/components/BarChart.vue';
 import DebugChart from '@/components/DebugChart.vue';
-import { getEventColor, getFilteredEventTypes, isFilteredEvent } from '@/utils/eventColors';
+import { getEventColor, getFilteredEventTypes, isFilteredEvent } from '@/utils';
 
 export default {
   name: 'AuditDetailView',

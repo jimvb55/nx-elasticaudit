@@ -7,7 +7,7 @@
 <script>
 import { ref, onMounted, watch, onBeforeUnmount } from 'vue';
 import { Chart, registerables } from 'chart.js';
-import { getEventColor } from '@/utils/eventColors';
+import { getEventColor } from '@/utils';
 
 // Register all Chart.js components
 Chart.register(...registerables);

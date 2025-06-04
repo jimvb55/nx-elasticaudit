@@ -8,7 +8,7 @@
 import { ref, onMounted, watch, onBeforeUnmount } from 'vue';
 import { Chart, registerables } from 'chart.js';
 import 'chartjs-adapter-date-fns';
-import { getEventColor } from '@/utils/eventColors';
+import { getEventColor } from '@/utils';
 
 // Register all Chart.js components
 Chart.register(...registerables);
