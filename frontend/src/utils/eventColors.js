@@ -46,6 +46,18 @@ const additionalEventColors = {
   'versionRemoved': '#BDBDBD',       // Grey 400
   'relationCreated': '#FF8A65',      // Deep Orange 300
   'relationRemoved': '#FFAB91',      // Deep Orange 200
+  // Common Nuxeo event types that may not be covered
+  'document': '#5D4037',             // Brown 700
+  'eventDocumentCategory': '#827717', // Lime 900
+  'documentLifeCycle': '#1B5E20',    // Green 900
+  'workflowInstance': '#880E4F',     // Pink 900
+  'documentACEUpdated': '#D81B60',   // Pink 600
+  'lifecycle': '#2E7D32',            // Green 800
+  'comment': '#0097A7',              // Cyan 700
+  'download': '#303F9F',             // Indigo 700
+  'NuxeoAuthentication': '#6A1B9A',  // Purple 800
+  'search': '#5E35B1',               // Deep Purple 600
+  'user': '#0288D1',                 // Light Blue 700
 };
 
 // Default color for any unspecified event types
@@ -64,9 +76,38 @@ const eventColors = {
  * @returns {string} - Hex color code
  */
 export function getEventColor(eventId) {
-  const color = eventColors[eventId] || defaultColor;
-  console.log(`getEventColor called for '${eventId}', returning color: ${color}`);
-  return color;
+  // If eventId is null or undefined, return the default color
+  if (!eventId) {
+    console.log(`getEventColor called with null/undefined eventId, returning default color: ${defaultColor}`);
+    return defaultColor;
+  }
+  
+  // First try exact match
+  if (eventColors[eventId]) {
+    console.log(`getEventColor exact match for '${eventId}': ${eventColors[eventId]}`);
+    return eventColors[eventId];
+  }
+  
+  // Check if any of our keys is a substring of the eventId
+  for (const [key, color] of Object.entries(eventColors)) {
+    if (eventId.includes(key)) {
+      console.log(`getEventColor substring match: '${eventId}' contains '${key}', returning: ${color}`);
+      return color;
+    }
+  }
+  
+  // Check for common types with different capitalization
+  const lowerEventId = eventId.toLowerCase();
+  for (const [key, color] of Object.entries(eventColors)) {
+    if (lowerEventId.includes(key.toLowerCase())) {
+      console.log(`getEventColor case-insensitive match: '${eventId}' contains '${key}', returning: ${color}`);
+      return color;
+    }
+  }
+  
+  // No match found, return default color
+  console.log(`getEventColor no match for '${eventId}', returning default color: ${defaultColor}`);
+  return defaultColor;
 }
 
 /**

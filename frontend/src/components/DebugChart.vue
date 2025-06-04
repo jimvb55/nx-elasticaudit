@@ -7,6 +7,22 @@
       <div>Canvas Width: {{ canvasWidth }}px</div>
       <div>Canvas Height: {{ canvasHeight }}px</div>
       <div>Chart Created: {{ chartCreated ? 'Yes' : 'No' }}</div>
+      
+      <!-- Color diagnostics section -->
+      <div class="color-diagnostics mt-4">
+        <h3>Color Diagnostics</h3>
+        <div 
+          v-for="(color, eventId) in allColors" 
+          :key="eventId"
+          class="color-sample"
+        >
+          <div class="color-box" :style="{ backgroundColor: color }"></div>
+          <div class="color-info">
+            <div class="event-id">{{ eventId }}</div>
+            <div class="color-hex">{{ color }}</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -14,7 +30,7 @@
 <script>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { Chart, registerables } from 'chart.js';
-import { getEventColor } from '@/utils';
+import { getEventColor, getAllEventColors } from '@/utils';
 
 // Register all Chart.js components
 Chart.register(...registerables);
@@ -36,6 +52,7 @@ export default {
     const canvasWidth = ref(0);
     const canvasHeight = ref(0);
     const chartCreated = ref(false);
+    const allColors = ref(getAllEventColors());
     let chart = null;
     let resizeObserver = null;
 
@@ -149,7 +166,8 @@ export default {
       containerHeight,
       canvasWidth,
       canvasHeight,
-      chartCreated
+      chartCreated,
+      allColors
     };
   }
 };
@@ -179,5 +197,49 @@ export default {
   font-size: 12px;
   font-family: monospace;
   margin-top: 8px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.color-diagnostics {
+  border-top: 1px solid #ccc;
+  padding-top: 8px;
+}
+
+.color-diagnostics h3 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.color-sample {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.color-box {
+  width: 20px;
+  height: 20px;
+  border: 1px solid #888;
+  margin-right: 8px;
+}
+
+.color-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.event-id {
+  font-weight: bold;
+}
+
+.color-hex {
+  font-size: 10px;
+  color: #666;
+}
+
+.mt-4 {
+  margin-top: 16px;
 }
 </style>
