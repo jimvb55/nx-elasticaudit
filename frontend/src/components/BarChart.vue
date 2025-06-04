@@ -111,9 +111,13 @@ export default {
       timeline.forEach((item, index) => {
         startPositions.push(currentPosition);
         durations.push(item.durationMs);
-        const color = getEventColor(item.startEvent.eventId);
+        
+        // Get color for event and ensure it's applied
+        const eventId = item.startEvent.eventId;
+        const color = getEventColor(eventId);
         colors.push(color);
-        console.log(`BarChart color for event ${item.startEvent.eventId}: ${color}`);
+        
+        console.log(`BarChart color for event ${eventId}: ${color}`);
         eventLabels.push(`${item.startEvent.eventId} → ${item.endEvent.eventId} (${item.durationFormatted})`);
         currentPosition += item.durationMs;
       });
@@ -124,6 +128,8 @@ export default {
           label: eventLabels[index],
           data: [duration],
           backgroundColor: colors[index],
+          borderColor: colors[index],
+          borderWidth: 1,
           barPercentage: 0.8,
           categoryPercentage: 0.9,
           // This is the key for stacking the bars properly

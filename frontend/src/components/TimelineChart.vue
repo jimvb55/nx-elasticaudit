@@ -83,9 +83,11 @@ export default {
         `${event.startEvent.eventId} → ${event.endEvent.eventId} (${event.durationFormatted})`
       );
       
+      // Get colors for each event
       const backgroundColors = timeline.map(event => {
-        const color = getEventColor(event.startEvent.eventId);
-        console.log(`TimelineChart color for event ${event.startEvent.eventId}: ${color}`);
+        const eventId = event.startEvent.eventId;
+        const color = getEventColor(eventId);
+        console.log(`TimelineChart color for event ${eventId}: ${color}`);
         return color;
       });
       
@@ -100,6 +102,7 @@ export default {
               backgroundColor: backgroundColors,
               borderColor: backgroundColors,
               borderWidth: 2,
+              fill: false,
               pointRadius: 6,
               pointHoverRadius: 8,
               tension: 0.4
