@@ -91,28 +91,34 @@ export default {
         return color;
       });
       
-      // Create individual datasets for each point with its own color
-      const datasets = [];
-      
-      // This approach creates a separate dataset for each point to ensure colors are applied correctly
-      durations.forEach((duration, index) => {
-        datasets.push({
-          label: eventLabels[index],
-          data: Array(labels.length).fill(null).map((_, i) => i === index ? duration : null),
-          backgroundColor: backgroundColors[index],
-          borderColor: backgroundColors[index],
-          borderWidth: 2,
-          pointRadius: 6,
-          pointHoverRadius: 8,
-          tension: 0.4
-        });
-      });
+      // Create a single dataset with all data points
+      // We'll use a single dataset with segment configuration to maintain connections between points
+      const dataset = {
+        label: 'Timeline',
+        data: durations,
+        backgroundColor: backgroundColors,
+        borderColor: backgroundColors,
+        borderWidth: 2,
+        pointRadius: 6,
+        pointHoverRadius: 8,
+        tension: 0.4,
+        // This enables individual segment coloring
+        segment: {
+          borderColor: (ctx) => {
+            // If we're in between two points, use the color of the first point
+            if (ctx.p0DataIndex !== undefined && ctx.p1DataIndex !== undefined) {
+              return backgroundColors[ctx.p0DataIndex];
+            }
+            return 'rgba(0,0,0,0.1)'; // Fallback
+          }
+        }
+      };
       
       chart = new Chart(ctx, {
         type: 'line',
         data: {
           labels,
-          datasets
+          datasets: [dataset]
         },
         options: {
           responsive: true,
@@ -123,19 +129,39 @@ export default {
             },
               tooltip: {
                 callbacks: {
+                  title: (tooltipItems) => {
+                    // Get the index of the first tooltip item
+                    const index = tooltipItems[0].dataIndex;
+                    return eventLabels[index];
+                  },
                   label: (context) => {
                     const index = context.dataIndex;
-                    const startUser = timeline[index].startEvent.principalName || 'Unknown';
-                    const endUser = timeline[index].endEvent.principalName || 'Unknown';
+                    
+                    // Display duration
+                    const durationLabel = `Duration: ${formatDuration(durations[index])}`;
+                    
+                    // Get the event info
+                    const startEvent = timeline[index].startEvent;
+                    const endEvent = timeline[index].endEvent;
+                    const startUser = startEvent.principalName || 'Unknown';
+                    const endUser = endEvent.principalName || 'Unknown';
                     
                     return [
-                      eventLabels[index],
-                      `Duration: ${formatDuration(durations[index])}`,
+                      durationLabel,
                       `Start: ${new Date(timeline[index].startTime).toLocaleString()}`,
                       `End: ${new Date(timeline[index].endTime).toLocaleString()}`,
                       `Start User: ${startUser}`,
-                      `End User: ${endUser}`
+                      `End User: ${endUser}`,
+                      `Start Event: ${startEvent.eventId}`,
+                      `End Event: ${endEvent.eventId}`
                     ];
+                  },
+                  // Add footer to show color information
+                  footer: (tooltipItems) => {
+                    const index = tooltipItems[0].dataIndex;
+                    const color = backgroundColors[index];
+                    const eventId = timeline[index].startEvent.eventId;
+                    return [`Event Type: ${eventId}`, `Color: ${color}`];
                   }
                 }
               }
