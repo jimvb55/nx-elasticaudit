@@ -208,7 +208,7 @@
                 </template>
                 <template v-slot:item.eventId="{ item }">
                   <v-chip
-                    :color="getEventColor(item.eventId)"
+                    :color="getEventColorName(item.eventId)"
                     text-color="white"
                     size="small"
                   >
@@ -231,6 +231,7 @@ import api from '@/services/api';
 import TimelineChart from '@/components/TimelineChart.vue';
 import BarChart from '@/components/BarChart.vue';
 import DebugChart from '@/components/DebugChart.vue';
+import { getEventColor, getFilteredEventTypes, isFilteredEvent } from '@/utils/eventColors';
 
 export default {
   name: 'AuditDetailView',
@@ -265,14 +266,7 @@ export default {
     
     // Event filtering
     const showAllEvents = ref(false);
-    const filteredEventTypes = [
-      'securityUpdated',
-      'documentSecurityUpdated',
-      'Chain Called',
-      'Sub-WF Changed',
-      'rootRegistered',
-      'rootUnregistered'
-    ];
+    const filteredEventTypes = getFilteredEventTypes();
     
     // Computed property for filtered timeline data
     const filteredTimelineData = computed(() => {
@@ -395,8 +389,10 @@ export default {
       }).format(date);
     };
 
-    const getEventColor = (eventId) => {
-      const eventColors = {
+    // Convert hex color to Vuetify color name for data table chips
+    const getEventColorName = (eventId) => {
+      // Map of event types to Vuetify color names
+      const eventColorNames = {
         'documentCreated': 'success',
         'documentModified': 'info',
         'documentCheckedIn': 'orange',
@@ -406,10 +402,16 @@ export default {
         'documentMoved': 'orange-darken-1',
         'documentRemoved': 'grey-darken-1',
         'loginSuccess': 'purple',
-        'downloadRequest': 'blue'
+        'downloadRequest': 'blue',
+        'securityUpdated': 'pink',
+        'documentSecurityUpdated': 'pink-lighten-2',
+        'Chain Called': 'indigo-lighten-2',
+        'Sub-WF Changed': 'indigo-lighten-1',
+        'rootRegistered': 'green-lighten-2',
+        'rootUnregistered': 'green-lighten-1'
       };
 
-      return eventColors[eventId] || 'primary';
+      return eventColorNames[eventId] || 'primary';
     };
 
     // Watch for chart type changes to force re-render
@@ -472,7 +474,7 @@ export default {
       totalDuration,
       eventHeaders,
       formatDateTime,
-      getEventColor,
+      getEventColorName,
       getChartComponent,
       handlePaginationUpdate,
       goBackToSearch,

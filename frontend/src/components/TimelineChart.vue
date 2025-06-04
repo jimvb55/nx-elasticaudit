@@ -8,6 +8,7 @@
 import { ref, onMounted, watch, onBeforeUnmount } from 'vue';
 import { Chart, registerables } from 'chart.js';
 import 'chartjs-adapter-date-fns';
+import { getEventColor } from '@/utils/eventColors';
 
 // Register all Chart.js components
 Chart.register(...registerables);
@@ -31,27 +32,7 @@ export default {
     let chart = null;
     let resizeObserver = null;
 
-    const eventColors = {
-      'documentCreated': '#4CAF50',      // Green
-      'documentModified': '#2196F3',     // Blue
-      'documentPublished': '#9C27B0',    // Purple
-      'documentCheckedIn': '#FF9800',    // Orange
-      'documentCheckedOut': '#F44336',   // Red
-      'documentLocked': '#607D8B',       // Blue Grey
-      'documentUnlocked': '#8BC34A',     // Light Green
-      'documentMoved': '#FF5722',        // Deep Orange
-      'documentVersioned': '#795548',    // Brown
-      'documentRemoved': '#9E9E9E',      // Grey
-      'workflowTaskCompleted': '#FFEB3B', // Yellow
-      'commentAdded': '#00BCD4',         // Cyan
-      'loginSuccess': '#673AB7',         // Deep Purple
-      'downloadRequest': '#3F51B5',      // Indigo
-      'default': '#1976D2'               // Default Blue
-    };
-
-    const getEventColor = (eventId) => {
-      return eventColors[eventId] || eventColors.default;
-    };
+    // Event colors are now imported from eventColors utility
 
     const formatDuration = (ms) => {
       if (ms < 1000) return `${ms}ms`;
