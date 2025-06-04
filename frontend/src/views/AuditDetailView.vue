@@ -125,6 +125,15 @@
                   <span class="ml-1 d-none d-sm-inline">Debug</span>
                 </v-btn>
               </v-btn-toggle>
+
+              <v-switch
+                v-model="showAllEvents"
+                label="Show All Events"
+                hide-details
+                density="compact"
+                color="primary"
+                class="ml-4 d-inline-flex"
+              ></v-switch>
             </v-card-title>
             <v-card-text>
               <div class="chart-container position-relative">
@@ -134,14 +143,17 @@
                 
                 <component 
                   :is="getChartComponent()"
-                  :timeline-data="timelineData"
+                  :timeline-data="filteredTimelineData"
                   :height="400"
-                  :key="`chart-${refreshKey}-${chartType}`"
+                  :key="`chart-${refreshKey}-${chartType}-${showAllEvents}`"
                   @mounted="onChartMounted"
                 />
               </div>
               <div class="text-center text-caption mt-2">
                 Timeline showing document lifecycle events and duration between operations
+                <v-chip size="x-small" color="info" class="ml-2" v-if="!showAllEvents && timelineData && filteredTimelineData">
+                  {{ timelineData.timeline.length - filteredTimelineData.timeline.length }} events hidden
+                </v-chip>
               </div>
             </v-card-text>
           </v-card>
@@ -168,9 +180,20 @@
               ></v-text-field>
             </v-card-title>
             <v-card-text>
+              <div class="d-flex align-center mb-2">
+                <span v-if="!showAllEvents && events.length !== filteredEvents.length" class="text-caption">
+                  Showing {{ filteredEvents.length }} of {{ events.length }} events
+                  <v-chip size="x-small" color="info" class="ml-2">
+                    {{ events.length - filteredEvents.length }} events filtered
+                  </v-chip>
+                </span>
+                <span v-else class="text-caption">
+                  Showing all {{ events.length }} events
+                </span>
+              </div>
               <v-data-table
                 :headers="eventHeaders"
-                :items="events"
+                :items="filteredEvents"
                 :search="search"
                 :loading="isLoading"
                 density="comfortable"
@@ -239,6 +262,40 @@ export default {
       sortBy: [{ key: 'eventDate', order: 'asc' }]
     });
     const refreshKey = ref(0);
+    
+    // Event filtering
+    const showAllEvents = ref(false);
+    const filteredEventTypes = [
+      'securityUpdated',
+      'documentSecurityUpdated',
+      'Chain Called',
+      'Sub-WF Changed',
+      'rootRegistered',
+      'rootUnregistered'
+    ];
+    
+    // Computed property for filtered timeline data
+    const filteredTimelineData = computed(() => {
+      if (!timelineData.value) return null;
+      if (showAllEvents.value) return timelineData.value;
+      
+      // Create a filtered copy of the timeline data
+      const filtered = {
+        ...timelineData.value,
+        timeline: timelineData.value.timeline.filter(item => 
+          !filteredEventTypes.includes(item.startEvent.eventId) && 
+          !filteredEventTypes.includes(item.endEvent.eventId)
+        )
+      };
+      
+      return filtered;
+    });
+    
+    // Computed property for filtered events table
+    const filteredEvents = computed(() => {
+      if (showAllEvents.value) return events.value;
+      return events.value.filter(event => !filteredEventTypes.includes(event.eventId));
+    });
 
     // Computed properties for document info
     const documentTitle = computed(() => {
@@ -399,7 +456,10 @@ export default {
       isChartLoading,
       error,
       timelineData,
+      filteredTimelineData,
       events,
+      filteredEvents,
+      showAllEvents,
       search,
       chartType,
       pagination,
